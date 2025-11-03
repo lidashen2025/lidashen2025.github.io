@@ -1,0 +1,317 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI 大模型性能排行榜 (LLM Leaderboard)</title>
+    
+    <!-- 引入 Google Fonts 字体 -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+
+    <!-- 内嵌 CSS 样式 -->
+    <style>
+        /* --- 全局和基础样式 --- */
+        :root {
+            --bg-color: #12121c;
+            --primary-card-bg: #1a1a2e;
+            --secondary-card-bg: #21213b;
+            --text-color: #e0e0e0;
+            --subtle-text-color: #a0a0b0;
+            --accent-gradient: linear-gradient(90deg, #4f46e5, #8b5cf6);
+            --border-color: #2a2a4a;
+            --shadow-color: rgba(0, 0, 0, 0.2);
+            --green-badge: #10b981;
+            --blue-badge: #3b82f6;
+            --yellow-badge: #f59e0b;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            line-height: 1.6;
+            padding: 2rem 1rem;
+        }
+
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+        }
+
+        /* --- 头部样式 --- */
+        header {
+            text-align: center;
+            margin-bottom: 3rem;
+        }
+
+        h1 {
+            font-size: 2.8rem;
+            font-weight: 700;
+            background: var(--accent-gradient);
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+            margin-bottom: 0.5rem;
+        }
+
+        .subtitle {
+            font-size: 1.1rem;
+            color: var(--subtle-text-color);
+        }
+
+        /* --- 排行榜主要布局 --- */
+        .leaderboard {
+            background-color: var(--primary-card-bg);
+            border-radius: 12px;
+            padding: 1.5rem;
+            box-shadow: 0 8px 30px var(--shadow-color);
+        }
+
+        .leaderboard-header {
+            display: grid;
+            grid-template-columns: 50px 2fr 1.5fr 1fr 1fr;
+            gap: 1rem;
+            padding: 0 1rem 1rem;
+            border-bottom: 1px solid var(--border-color);
+            font-weight: 600;
+            color: var(--subtle-text-color);
+            text-transform: uppercase;
+            font-size: 0.8rem;
+            letter-spacing: 0.5px;
+        }
+
+        /* --- 单个模型行样式 --- */
+        .model-row {
+            display: grid;
+            grid-template-columns: 50px 2fr 1.5fr 1fr 1fr;
+            gap: 1rem;
+            align-items: center;
+            padding: 1.5rem 1rem;
+            border-radius: 8px;
+            background-color: var(--primary-card-bg);
+            transition: transform 0.2s ease-out, background-color 0.2s, box-shadow 0.2s;
+            margin-top: 1rem;
+        }
+
+        .leaderboard-list .model-row:first-child {
+            margin-top: 0;
+        }
+        
+        .model-row:nth-child(even) {
+            background-color: var(--secondary-card-bg);
+        }
+
+        .model-row:hover {
+            transform: scale(1.02);
+            background-color: var(--secondary-card-bg);
+            box-shadow: 0 5px 20px var(--shadow-color);
+            cursor: pointer;
+        }
+
+        /* --- 行内元素样式 --- */
+        .rank {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: var(--subtle-text-color);
+        }
+
+        .model-info {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .model-name {
+            font-size: 1.1rem;
+            font-weight: 600;
+        }
+
+        .model-params {
+            font-size: 0.85rem;
+            color: var(--subtle-text-color);
+        }
+
+        .org {
+            font-weight: 600;
+        }
+
+        .score {
+            font-size: 1.1rem;
+            color: var(--text-color);
+        }
+
+        /* --- 标签样式 (Badge) --- */
+        .badge {
+            display: inline-block;
+            padding: 0.3em 0.8em;
+            border-radius: 12px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            color: #fff;
+            white-space: nowrap;
+        }
+
+        .badge.open-source { background-color: var(--green-badge); }
+        .badge.api { background-color: var(--blue-badge); }
+        .badge.limited { background-color: var(--yellow-badge); }
+
+        /* --- 尾部样式 --- */
+        footer {
+            text-align: center;
+            margin-top: 4rem;
+            color: var(--subtle-text-color);
+            font-size: 0.9rem;
+        }
+
+        /* --- 响应式设计 (手机端) --- */
+        @media (max-width: 768px) {
+            h1 {
+                font-size: 2rem;
+            }
+            .leaderboard-header {
+                display: none; /* 在手机上隐藏头部 */
+            }
+            .model-row {
+                grid-template-columns: 1fr; /* 切换为单列布局 */
+                padding: 1.5rem;
+                gap: 0.8rem;
+                position: relative; /* 为排名数字定位做准备 */
+            }
+            .model-row > div:not(.rank) {
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+                padding: 0.5rem 0;
+                border-bottom: 1px solid var(--border-color);
+            }
+            .model-row > div:last-child {
+                border-bottom: none;
+            }
+            .model-row > div::before {
+                content: attr(data-label); /* 显示数据标签 */
+                font-weight: 600;
+                color: var(--subtle-text-color);
+            }
+            .rank {
+                position: absolute;
+                top: 1rem;
+                right: 1rem;
+                font-size: 2rem;
+            }
+            .model-info {
+                flex-direction: column;
+                align-items: flex-end;
+            }
+            .model-name { text-align: right; }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <header>
+            <h1>AI大模型性能排行榜</h1>
+            <p class="subtitle">一个基于公开基准测试（如MMLU）的顶尖语言模型排名</p>
+        </header>
+
+        <main class="leaderboard">
+            <!-- 表格头部 -->
+            <div class="leaderboard-header">
+                <div class="header-rank">#</div>
+                <div class="header-model">模型名称</div>
+                <div class="header-org">开发者</div>
+                <div class="header-score">MMLU 得分</div>
+                <div class="header-access">访问类型</div>
+            </div>
+
+            <!-- 模型列表 -->
+            <div class="leaderboard-list">
+                <!-- 排名 1 -->
+                <div class="model-row">
+                    <div class="rank">1</div>
+                    <div class="model-info" data-label="模型">
+                        <span class="model-name">Claude 3 Opus</span>
+                        <span class="model-params">2024年3月发布</span>
+                    </div>
+                    <div class="org" data-label="开发者">Anthropic</div>
+                    <div class="score" data-label="MMLU"><strong>95.0%</strong></div>
+                    <div class="access" data-label="访问类型"><span class="badge api">API 访问</span></div>
+                </div>
+
+                <!-- 排名 2 -->
+                <div class="model-row">
+                    <div class="rank">2</div>
+                    <div class="model-info" data-label="模型">
+                        <span class="model-name">GPT-4o</span>
+                        <span class="model-params">2024年5月发布</span>
+                    </div>
+                    <div class="org" data-label="开发者">OpenAI</div>
+                    <div class="score" data-label="MMLU"><strong>94.2%</strong></div>
+                    <div class="access" data-label="访问类型"><span class="badge api">API 访问</span></div>
+                </div>
+                
+                <!-- 排名 3 -->
+                <div class="model-row">
+                    <div class="rank">3</div>
+                    <div class="model-info" data-label="模型">
+                        <span class="model-name">Gemini 1.5 Pro</span>
+                        <span class="model-params">2024年2月发布</span>
+                    </div>
+                    <div class="org" data-label="开发者">Google</div>
+                    <div class="score" data-label="MMLU"><strong>92.5%</strong></div>
+                    <div class="access" data-label="访问类型"><span class="badge limited">限定访问</span></div>
+                </div>
+
+                <!-- 排名 4 -->
+                <div class="model-row">
+                    <div class="rank">4</div>
+                    <div class="model-info" data-label="模型">
+                        <span class="model-name">Llama 3 70B</span>
+                        <span class="model-params">70B 参数</span>
+                    </div>
+                    <div class="org" data-label="开发者">Meta</div>
+                    <div class="score" data-label="MMLU"><strong>82.0%</strong></div>
+                    <div class="access" data-label="访问类型"><span class="badge open-source">开源</span></div>
+                </div>
+
+                <!-- 排名 5 -->
+                <div class="model-row">
+                    <div class="rank">5</div>
+                    <div class="model-info" data-label="模型">
+                        <span class="model-name">Mistral Large</span>
+                        <span class="model-params">2024年2月发布</span>
+                    </div>
+                    <div class="org" data-label="开发者">Mistral AI</div>
+                    <div class="score" data-label="MMLU"><strong>81.2%</strong></div>
+                    <div class="access" data-label="访问类型"><span class="badge api">API 访问</span></div>
+                </div>
+                
+                <!-- 排名 6 -->
+                <div class="model-row">
+                    <div class="rank">6</div>
+                    <div class="model-info" data-label="模型">
+                        <span class="model-name">Mixtral 8x22B</span>
+                        <span class="model-params">MoE 模型</span>
+                    </div>
+                    <div class="org" data-label="开发者">Mistral AI</div>
+                    <div class="score" data-label="MMLU"><strong>77.8%</strong></div>
+                    <div class="access" data-label="访问类型"><span class="badge open-source">开源</span></div>
+                </div>
+
+            </div>
+        </main>
+
+        <footer>
+            <p>数据仅为示例，非实时更新。设计与代码 by AI。 </p>
+        </footer>
+    </div>
+
+</body>
+</html>
